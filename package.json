@@ -1,0 +1,22 @@
+{
+  "name": "poly-vocab-server",
+  "version": "1.0.0",
+  "description": "Server for Poly-Vocab chrome extension. Bassicaly gets translations ",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "vocab",
+    "languages",
+    "translation"
+  ],
+  "author": "AV",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "config": "^1.26.1",
+    "express": "^4.15.2",
+    "google-translate-api": "arthurlacoste/google-translate-api"
+  }
+}
