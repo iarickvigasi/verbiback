@@ -126,7 +126,7 @@ const routes = (app) => {
         });
       }
       else {
-        dictionary.addWord({ originalWord, translation }, (err) => {
+        dictionary.addWord({ originalWord: normalizeString(originalWord), translation: normalizeString(translation) }, (err) => {
           res.status(200).json({ success: true });
         });
       }
@@ -203,13 +203,13 @@ const routes = (app) => {
   // @TODO: Move to translate routes
   app.get('/translate', verifyToken, (req, res) => {
     console.log('Got translate request!', req.query.toString());
-    const { word, to } = req.query;
+    const { word, to, from } = req.query;
 
     if (!word || !to) {
       return res.status(400).send('Please provide "word" and "to" properites');
     }
 
-    translate(word, { to }).then(tres => {
+    translate(word, { from, to }).then(tres => {
       console.log('Processed translation', tres);
       res.status(200).send(tres);
     })
@@ -224,5 +224,7 @@ const validateEmail = email => {
   const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(email);
 };
+
+const normalizeString = s => s[0].toUpperCase() + s.substr(1).toLowerCase();
 
 module.exports = routes;
