@@ -8,6 +8,7 @@ const userSchema = Schema({
     email       : String,
     password    : String
   },
+  fbId: String,
   dictionaries: [ Schema.Types.ObjectId ]
 });
 

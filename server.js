@@ -11,12 +11,14 @@ const
   morgan = require('morgan'),
   cookieParser = require('cookie-parser'),
   session = require('express-session'),
-  logger = require('express-logger');
+  logger = require('express-logger'),
+  facebookManager = require('./app/facebookManager');
 
 const routes = require('./app/routes');
 const configDB = require('./config/database.js');
 
-mongoose.connect(configDB.url)
+mongoose.connect(configDB.url);
+facebookManager.init(config);
 
 const app = express();
 app.set('port', process.env.PORT || config.get('port'));

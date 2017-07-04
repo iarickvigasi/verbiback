@@ -1,9 +1,12 @@
 const jwt = require('jsonwebtoken');
 const translate = require('google-translate-api');
+const request = require('request-promise');
+
 
 const User = require('./models/users');
 const Dictionary = require('./models/dictionary');
 const config = require('../config/auth');
+const facebookManager = require('./facebookManager');
 
 const Mappers = require('./mappers');
 
@@ -41,6 +44,15 @@ const routes = (app) => {
       next();
     });
   };
+
+  const getFacebookUser = (req, res, next) => {
+    const { facebookUserId } = req;
+    User.findOne({ fbId: facebookUserId}, (err, user) => {
+      if (err) throw err;
+      req.user = user;
+      next();
+    });
+  }
 
   app.post('/signup', (req, res) => {
     const { email, password } = req.body;
@@ -97,6 +109,44 @@ const routes = (app) => {
 
   app.post('/authorizate', verifyToken, (req, res) => {
     res.status(200).json({ success: true, token: req.token });
+  });
+
+  app.post('/facebookAuth', (req, res, next) => {
+    const { token } = req.body;
+
+    if (!token) return res.status(400).json({ success: false, message: 'No token provided'});
+    request(`https://graph.facebook.com/debug_token?input_token=${token}&access_token=${facebookManager.appToken}`)
+    .then((response) => {
+      try {
+        const data = JSON.parse(response).data;
+        if (!data.is_valid) return res.status(400).json({ success: false, message: 'Not valid token'});
+        req.facebookUserId = data.user_id;
+        next();
+      } catch (e) {
+        throw e;
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      throw err;
+    })
+  }, getFacebookUser,
+  (req, res) => {
+    const { user } = req;
+    if (!user) {
+      const newUser = User.create({ fbId: req.facebookUserId}, (err, createdUser) => {
+        if (err) throw err;
+        console.log('user', newUser);
+        createdUser.save(err => {
+          if (err) throw err;
+          const token = jwt.sign(createdUser._doc, config.secret, { expiresIn: '124h' });
+          return res.status(200).json({ success: true, token });
+        });
+      });
+    } else {
+      const token = jwt.sign(user._doc, config.secret, { expiresIn: '124h' });
+      return res.status(200).json({ success: true, token });
+    }
   });
 
   app.post('/words/save', verifyToken, getUser, (req, res) => {
